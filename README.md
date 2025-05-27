@@ -93,7 +93,7 @@ tables.mat     ↓            ↓           ↓         Paper Figures:
 
 | Script | Purpose | Key Outputs | Runtime* |
 |--------|---------|-------------|----------|
-| `batchall.m` | Process 18 datasets, statistical tests | Workspace variables per dataset | ~10 min |
+| `batchall.m` | Process 18 datasets, statistical tests | Workspace variables per dataset | ~60 min |
 | `allmats.m` | Convert to 3D matrices (50 trials/condition) | `allommat`, `allAmat`, `allBmat` | ~2 min |
 | `FindPEONS.m` | **Main analysis:** Identify PEONs using split-half | `PEONs_training`, `preferred_tone_direction` | ~5 min |
 
