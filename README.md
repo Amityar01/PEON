@@ -135,14 +135,10 @@ bl[ID].mat             % Baseline activity
 ## Code Availability
 This code is archived on Zenodo 
 - **GitHub (development):** https://github.com/Amityar01/PEON/ 
-- **Zenodo (permanent archive):TBD
+- **Zenodo (permanent archive):** TBD
 
 ## Data Availability
 - **Raw experimental data:** Available on Zenodo https://doi.org/10.5281/zenodo.15531781
-
-
-If you're working with different auditory cortex data, you would need to substantially modify these scripts or develop your own analysis approach.
-
 
 ## License
 
