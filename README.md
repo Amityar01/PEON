@@ -135,7 +135,7 @@ bl[ID].mat             % Baseline activity
 ## Code Availability
 This code is archived on Zenodo 
 - **GitHub (development):** https://github.com/Amityar01/PEON/ 
-- **Zenodo (permanent archive):** TBD
+- **Zenodo (permanent archive):** https://doi.org/10.5281/zenodo.15531879
 
 ## Data Availability
 - **Raw experimental data:** Available on Zenodo https://doi.org/10.5281/zenodo.15531781
