@@ -501,7 +501,14 @@ overall_means_S2A_table = array2table(overall_means_S2A, 'VariableNames', {'Prob
 stats_S2A = {'Spearman_rho', rho_om; 'p_value', p_om; 'n_datapoints', n_datapoints};
 stats_S2A_table = cell2table(stats_S2A, 'VariableNames', {'Statistic', 'Value'});
 
-writetable(figure_S2A_table, 'Figure_S2A_data.xlsx', 'Sheet', 'Individual_Points');
-writetable(overall_means_S2A_table, 'Figure_S2A_data.xlsx', 'Sheet', 'Overall_Means');
-writetable(stats_S2A_table, 'Figure_S2A_data.xlsx', 'Sheet', 'Statistics');
-fprintf('Data saved to Figure_2D_data.xlsx\n');
+% CORRECTION v2: every mode wrote 'Figure_S2A_data.xlsx' without clearing it, so the published S2A sheet held the
+% ODD-mode (Fig 2D) points over rows left by an ALL-mode run. Each mode now writes its own file and clears it first.
+switch ANALYSIS_MODE
+    case 'ODD',  f_sd = 'Figure_2D_data.xlsx';     % S1 Data
+    case 'EVEN', f_sd = 'Figure_S2A_data.xlsx';    % S3 Data, S2 Fig A
+    case 'ALL',  f_sd = 'Figure_S2B_data.xlsx';    % S3 Data, S2 Fig B
+end
+writetable(figure_S2A_table, f_sd, 'Sheet', 'Individual_Points', 'WriteMode', 'overwritesheet');
+writetable(overall_means_S2A_table, f_sd, 'Sheet', 'Overall_Means', 'WriteMode', 'overwritesheet');
+writetable(stats_S2A_table, f_sd, 'Sheet', 'Statistics', 'WriteMode', 'overwritesheet');
+fprintf('Data saved to %s (%s mode)\n', f_sd, ANALYSIS_MODE);

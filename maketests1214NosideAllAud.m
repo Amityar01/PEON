@@ -45,6 +45,13 @@
 clear test
 clear T
 clear TT*
+% CORRECTION v2: in 16 penetrations the 75%/20% tone lists stored in res*.mat belong to another stimulus
+% sequence than the omission lists; use the corrected lists from indices_7520_v2.mat (data record, version 2).
+I7520 = load('indices_7520_v2.mat', 'idx7520');
+if isfield(I7520.idx7520, ['p' tables{1,tt}])
+    c7520 = I7520.idx7520.(['p' tables{1,tt}]);
+    indd205A = c7520.indd205A; indd205B = c7520.indd205B; inds205A = c7520.inds205A; inds205B = c7520.inds205B;
+end
 nu=find(((squeeze(sum(sum(res(:,:,:)))))>200)');
 inddss={indd5+1000,indd55+2000,indd105+4000,indd205+6000,indd205+7000,indd105+5000,indd55+3000,indd5};
 inddds={indd55A-4000,indd55A-4000,indd105A-4000,indd205A-4000,indd205B-4000,indd105B-4000,indd55B-4000,indd55B-4000};
@@ -293,6 +300,11 @@ for jj=1:8
 end
 ttt=ttt+t;
 sel=find(~isinf(mean(meanom')) & ~isnan(mean(meanom')) & ~(mean(meanom')==0));
+% CORRECTION v2: units removed by 'sel' must also leave allom/allst/alldv/allind, which hold one row per unit;
+% otherwise every later unit's responses are paired with the depth/area labels of the next unit.
+dropped = ttt - t + setdiff(1:t, sel);
+allom(dropped,:) = []; allst(dropped,:) = []; alldv(dropped,:) = []; allind(dropped,:) = [];
+ttt = ttt - numel(dropped);
 nu=nu(sel);
 meanom=meanom(sel,:) ;
 meandv=meandv(sel,:) ;

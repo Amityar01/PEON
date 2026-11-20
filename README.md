@@ -11,6 +11,17 @@ This repository contains the **MATLAB analysis code** used to generate figures a
 **Associated Publication:**
 > Yaron, A., Shiramatsu-Isoguchi, T., Kern, F. B., Ohki, K., Takahashi, H., & Chao, Z. C. (2025). Auditory cortex neurons that encode negative prediction errors respond to omissions of sounds in a predictable sequence. *PLOS Biology*. (Manuscript ID: PBIOLOGY-D-25-00849R2)
 
+## Version 2
+
+Version 2 corrects errors in the analysis code found after publication, as described in the correction notice to the article (DOI to be added). Changed lines are marked `% CORRECTION v2`:
+- `maketests1214NosideAllAud.m`: a unit excluded after its responses were stored is also removed from the response lists (previously the responses of the following units were paired with the labels of a neighbouring unit); the 75%/20% tone lists are read from `indices_7520_v2.mat`.
+- `depthnewest.m`: each PEON is counted in its own auditory field; the layer test uses the 900–1,400 µm infragranular range.
+- `FindPEONS.m`: each analysis mode writes its own data file.
+- `plot4A.m`, `rampuphalf2.m`: the PEONs' own preferred directions and responses are used; `rampuphalf2.m` refits the logistic from several start values, and its last bin includes the last sequence position.
+- `omissionvstone.m`: the test trials of the current analysis mode are used.
+
+Use with version 2 of the data record (https://doi.org/10.5281/zenodo.15531781), which adds `indices_7520_v2.mat`.
+
 
 ## Quick Start (to reproduce our results)
 
@@ -49,7 +60,7 @@ Our Raw Data → Statistical Tests → Matrix Format → PEON Identification →
   res*.mat → batchall.m → allmats.m → FindPEONS.m → [figure scripts]
   bl*.mat      ↓            ↓           ↓              ↓
 tables.mat     ↓            ↓           ↓         Paper Figures:
-           18 datasets  allommat    123 PEONs     2C,2D, 2E, 2F, 3A, 4A, 4C
+           18 datasets  allommat    125 PEONs     2C,2D, 2E, 2F, 3A, 4A, 4C
            processed      ↓           ↓              
                      990 neurons  preferred_tone   
                      analyzed      _direction
@@ -97,7 +108,7 @@ ALPHA_WILCOX = 0.05;       % Significance level for Wilcoxon tests
 ### Our Specific Dataset
 - **Recording sessions:** 18 penetrations in rat auditory cortex
 - **Total neurons:** ~990 analyzed
-- **PEONs identified:** 123 neurons  
+- **PEONs identified:** 125 neurons  
 - **Trials per condition:** 50 (after subsampling)
 - **Probability conditions:** 8 levels (0%, 5%, 10%, 20%, 75%, 85%, 90%, 95%)
 - **Brain areas:** A1, VAF, AAF
@@ -129,6 +140,7 @@ T                      % Table with neuron metadata (depth, location)
 tables.mat              % Dataset metadata (18 datasets)
 res[ID].mat            % Raw neural responses  
 bl[ID].mat             % Baseline activity
+indices_7520_v2.mat    % Corrected 75%/20% tone lists (data record, version 2)
 ```
 
 

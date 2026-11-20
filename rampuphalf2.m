@@ -39,22 +39,28 @@
 % Author: Amit Yaron
 %% --- PART 1: Logistic Fit to Binned Data ---
 clear tim
+% CORRECTION v2: FindPEONS.m keeps the preferred direction and the aligned responses of ALL units; take those of
+% the PEONs (in PEON order), and use the training trials when there is no separate test set (ALL mode).
+if numel(preferred_tone_direction) == size(allommat,1), dirP = preferred_tone_direction(PEONs_training); else, dirP = preferred_tone_direction; end
+if isempty(testing_indices), respAll = PEON_responses_orderedtr; trialIdx = training_indices; else, respAll = PEON_responses_ordered; trialIdx = testing_indices; end
+if size(respAll,1) == size(allommat,1), respP = respAll(PEONs_training,:,:); else, respP = respAll; end
 
 % Process timing data for each condition and neuron
 for i = 1:8
     for j = 1:length(PEONs_training)
-        if preferred_tone_direction(j) == 1
-            tim(i,j,:) = mod(allind{PEONs_training(j),i}, 1000);
+        % CORRECTION v2: allind has one row per unit; PEONs_training are rows of the 990-unit list -> omind()
+        if dirP(j) == 1
+            tim(i,j,:) = mod(allind{omind(PEONs_training(j)),i}, 1000);
         else
-            tim(9-i,j,:) = mod(allind{PEONs_training(j),i}, 1000);
+            tim(9-i,j,:) = mod(allind{omind(PEONs_training(j)),i}, 1000);
         end
     end
 end
-tim = tim(:,:,testing_indices);
+tim = tim(:,:,trialIdx);
 
 % Data dimensions check
 [numConditions, numNeurons, numTimePoints] = size(tim);
-[numNeuronsData, numTimePointsData, numConditionsData] = size(PEON_responses_ordered);
+[numNeuronsData, numTimePointsData, numConditionsData] = size(respP);
 if numNeurons ~= numNeuronsData || numTimePoints ~= numTimePointsData || numConditions ~= numConditionsData
     error('Dimensions of tim and PEON_responses_ordered do not match.');
 end
@@ -74,13 +80,15 @@ binnedResponseMap = containers.Map('KeyType', 'double', 'ValueType', 'any');
 for cond = 5:8
     for neuron = 1:numNeurons
         neuron_times = squeeze(tim(cond, neuron, :));       % 1D time array
-        neuron_responses = squeeze(PEON_responses_ordered(neuron, :, cond)); % 1D responses array
+        neuron_responses = squeeze(respP(neuron, :, cond)); % 1D responses array
         
         for t = 1:numTimePoints
             current_time = neuron_times(t);
             current_response = neuron_responses(t);
             % Find the bin index for the current time
             binIdx = find(current_time >= binEdges(1:end-1) & current_time < binEdges(2:end), 1);
+            % CORRECTION v2: the last bin includes its upper edge (the last sequence position fell in no bin)
+            if isempty(binIdx) && current_time == binEdges(end), binIdx = numel(binCenters); end
             if ~isempty(binIdx)
                 binCenter = binCenters(binIdx);
                 if isKey(binnedResponseMap, binCenter)
@@ -119,6 +127,19 @@ initial_params1 = [mean(meansBins), 0.1, mean(timeBins)];
 
 % Fit logistic model to binned data
 [beta_hat1, ~, ~] = nlinfit(timeBins, meansBins, logistic_func1, initial_params1);
+% CORRECTION v2: refit from 252 other start values and keep a clearly better fit (R^2 higher by more than 0.001).
+% From the start above, MATLAB R2025b stops at a worse local optimum for S4 Fig A (R^2 0.05; best fit 0.19).
+R2fun1 = @(b) 1 - sum((meansBins - logistic_func1(b, timeBins)).^2) / ((length(meansBins) - 1) * var(meansBins));
+bestR2 = R2fun1(beta_hat1); ws = warning('off', 'all');
+[sA, sB, sC] = ndgrid([mean(meansBins) 1 2 3 4 5 6], [0.002 0.005 0.01 0.02 0.05 0.1], [mean(timeBins) 50 100 200 300 500]);
+for s1 = 1:numel(sA)
+    try
+        b1 = nlinfit(timeBins, meansBins, logistic_func1, [sA(s1) sB(s1) sC(s1)]);
+        if R2fun1(b1) > bestR2 + 1e-3, bestR2 = R2fun1(b1); beta_hat1 = b1; end
+    catch
+    end
+end
+warning(ws);
 
 % Calculate R-squared value
 yfit1 = logistic_func1(beta_hat1, timeBins);
@@ -154,7 +175,8 @@ set(gcf, 'Renderer', 'painters');
 exportgraphics(gcf, 'logistic_fit_binned_data.pdf', 'ContentType', 'vector', 'BackgroundColor', 'none');
 
 %% --- PART 2: Aggregate Neuronal Response with Logistic Fit ---
-% Compute aggregate data
+% Compute aggregate data. Note: the 50 points are standards no. 1, 19, 37, ... of the 95% sequences (allmats.m keeps
+% every 18th of ~900 standards), and the value is the SUM of the 95%A and 95%B responses (README_code_v2.md, section 7).
 dataAgg = mean(allAmat(PEONs_training,:,1), 3) + mean(allBmat(PEONs_training,:,7), 3);
 timeAgg = linspace(1, 50, 50); 
 

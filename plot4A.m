@@ -80,6 +80,8 @@
 
 peon_idx = PEONs_training;
 nPeons = length(peon_idx);
+% CORRECTION v2: FindPEONS.m keeps the preferred direction of ALL units; use the PEONs' own directions (PEON order).
+if numel(preferred_tone_direction) == size(allommat,1), dirP = preferred_tone_direction(PEONs_training); else, dirP = preferred_tone_direction; end
 probability_values = [0, 0.05, 0.1, 0.2, 0.75, 0.85, 0.90, 0.95];
 
 % Initialize arrays for collecting responses separately for each probability
@@ -94,7 +96,7 @@ for i = 1:nPeons
     % For each probability condition
     for p = 1:8
         % For omissions:
-        if preferred_tone_direction(i) == 1
+        if dirP(i) == 1
             om_resp = mean(allommat(neuron, testing_indices, p));
         else
             om_resp = mean(allommat(neuron, testing_indices, 9-p));
@@ -103,7 +105,7 @@ for i = 1:nPeons
         
         % For tones - we need to handle boundary cases
         if p >= 2 && p <= 8  % For OP tone (conditions 2-8)
-            if preferred_tone_direction(i) == 1
+            if dirP(i) == 1
                 % If preferred direction is 1, OP is tone B
                 op_resp = mean(allBmat(neuron, testing_indices, p-1));
             else
@@ -114,7 +116,7 @@ for i = 1:nPeons
         end
         
         if p >= 1 && p <= 7  % For ONP tone (conditions 1-7)
-            if preferred_tone_direction(i) == 1
+            if dirP(i) == 1
                 % If preferred direction is 1, ONP is tone A
                 onp_resp = mean(allAmat(neuron, testing_indices, p));
             else
@@ -239,6 +241,15 @@ exportgraphics(gcf, 'PEON_responses_analysis.pdf', 'ContentType', 'vector', 'Bac
 %%
 % Extract Figure 4A data
 prob_values = [0, 5, 10, 20, 75, 85, 90, 95];
+% CORRECTION v2: S2 Data are computed here, from the same PEON set as the figure and the statistics: group-mean
+% correlations over the condition means; per-neuron means as in the curves above.
+means_omission = means_om; err_omission = err_om; means_tonePref = means_op; err_tonePref = err_op;
+means_toneNonPref = means_onp; err_toneNonPref = err_onp;
+[rho_omission, p_omission] = corr(prob_values', means_om', 'Type', 'Spearman');
+[rho_pref, p_pref] = corr(prob_values(2:8)', means_op(2:8)', 'Type', 'Spearman');
+[rho_nonpref, p_nonpref] = corr(prob_values(1:7)', means_onp(1:7)', 'Type', 'Spearman');
+allom_peon_mean = [om_by_prob{:}]; allA_peon_mean = [op_by_prob{2:8}]; allB_peon_mean = [onp_by_prob{1:7}];
+f_s2 = 'Figure_4A_data.xlsx';
 
 % Create data table for the three response types
 figure_4A_data = table();
@@ -251,16 +262,16 @@ figure_4A_data.ToneNonPref_Mean = means_toneNonPref';
 figure_4A_data.ToneNonPref_SEM = err_toneNonPref';
 
 % Save main data
-writetable(figure_4A_data, 'Figure_4A_data.xlsx', 'Sheet', 'Response_Data');
+writetable(figure_4A_data, f_s2, 'Sheet', 'Response_Data', 'WriteMode', 'overwritesheet');
 
 % Save correlation statistics
 stats_4A = {'Omission_rho', rho_omission; 'Omission_p', p_omission; ...
            'Preferred_rho', rho_pref; 'Preferred_p', p_pref; ...
            'NonPreferred_rho', rho_nonpref; 'NonPreferred_p', p_nonpref};
 writetable(cell2table(stats_4A, 'VariableNames', {'Statistic', 'Value'}), ...
-           'Figure_4A_data.xlsx', 'Sheet', 'Correlations');
+           f_s2, 'Sheet', 'Correlations', 'WriteMode', 'overwritesheet');
 
-fprintf('Figure 4A data saved to Figure_4A_data.xlsx\n');
+fprintf('Figure 4A data saved to %s\n', f_s2);
 %%
 %% --- Build long-format table of individual responses for Figure 4A ---
 
@@ -304,7 +315,7 @@ fig4A_indiv = cell2table(rows, ...
         'VariableNames', {'NeuronID','Probability_Percent','ResponseType','FiringRate'});
 
 % Append to the same workbook
-writetable(fig4A_indiv, 'Figure_4A_data.xlsx', ...
-           'Sheet', 'Individual_Points');
+writetable(fig4A_indiv, f_s2, ...
+           'Sheet', 'Individual_Points', 'WriteMode', 'overwritesheet');
 
 fprintf('Added %d individual rows to sheet "Individual_Points".\n',height(fig4A_indiv));

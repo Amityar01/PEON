@@ -135,12 +135,14 @@ set(gcf, 'Renderer', 'painters');
 exportgraphics(gcf, 'neuron_distribution_by_depthn.pdf', 'ContentType', 'vector', 'BackgroundColor', 'none');
 
 %%
+% CORRECTION v2: count each PEON in its own area. PEONs_training are rows of the 990-unit list and lo has one
+% entry per unit in T, so the unit index is omind(PEONs_training) (was lo(PEONs_training)).
 ALL1=sum(lo(omind)=='1');
-PEON1=sum(lo(PEONs_training)=='1');
+PEON1=sum(lo(omind(PEONs_training))=='1');
 ALL2=sum(lo(omind)=='2');
-PEON2=sum(lo(PEONs_training)=='2');
+PEON2=sum(lo(omind(PEONs_training))=='2');
 ALL3=sum(lo(omind)=='3');
-PEON3=sum(lo(PEONs_training)=='3');
+PEON3=sum(lo(omind(PEONs_training))=='3');
 % %%
 % Actual counts of omission-sensitive neurons (ORNs and PEONs)
 
@@ -190,7 +192,7 @@ disp('P-values for PEONs:');
 disp(p_values_peons);
 
 % Optional: Plot the bootstrap distributions for visualization
-
+figure;   % CORRECTION v2: new window (the histograms below were drawn over the Fig 2E window)
 
 for i = 1:length(actual_counts_peons)
     subplot(3, 2, i*2);
@@ -206,11 +208,12 @@ end
 % Define the names of the auditory fields
 areaNames = {'A1', 'VAF', 'AAF'};
 % Define the total number of neurons recorded in each area
-totalNeurons = [632, 241, 117];
+% CORRECTION v2: the published counts and p were hard-coded in this block; use the values computed above
+totalNeurons = [ALL1, ALL2, ALL3];
 % Define the number of PEONs identified in each area
-peonCounts = [93, 23, 7];
+peonCounts = [PEON1, PEON2, PEON3];
 % Define the p-value for significance (for annotation)
-p_value_A1 = 0.0036; % From your bootstrap analysis
+p_value_A1 = p_values_peons(1); % From the bootstrap analysis above
 
 % --- Calculations ---
 % Calculate the percentage of PEONs in each area
@@ -398,4 +401,13 @@ for i = 1:3
 end
 set(gcf, 'Renderer', 'painters');
 exportgraphics(gcf, 'PEON_distribution_arean.pdf', 'ContentType', 'vector', 'BackgroundColor', 'none');
+
+% CORRECTION v2: layer test reported in the text (two-sided bootstrap, 300,000 samples), on the layer counts of
+% Fig 2E (above), with the 900-1,400 um infragranular range of Fig 2E and the Methods (the published text used
+% 900-1,800 um). (Placed last, so that the Fig 2F bootstrap draws the same random numbers as before.)
+actual_layer = [count_supra3, count_gran3, count_infra3];
+empirical_layer = [count_supra1, count_gran1, count_infra1];
+boot_layer = mnrnd(sum(actual_layer), empirical_layer / sum(empirical_layer), 300000);
+p_values_layers = arrayfun(@(i) mean(abs(boot_layer(:,i) - mean(boot_layer(:,i))) >= abs(actual_layer(i) - mean(boot_layer(:,i)))), 1:3);
+fprintf('Layers supra/gran/infra: PEON %.1f / %.1f / %.1f %%; two-sided bootstrap p = %.3f / %.3f / %.3f\n', percent_supra3, percent_gran3, percent_infra3, p_values_layers);
 

@@ -62,7 +62,9 @@
 % Author: Amit Yaron
 
 alpha = 0.05;                        % significance level
-testing_indices = 2:2:50;            % EVEN trials for test set
+% CORRECTION v2: use the test half of the current split (set by FindPEONS.m; all trials in ALL mode) instead of always
+% the EVEN trials, so the same script gives Fig 4C (ODD split) and S5 Fig A/B (EVEN split, all trials).
+if ~exist('testing_indices','var') || isempty(testing_indices), testing_indices = training_indices; end
 num_probabilities = 8;
 
 % -------------------------------------------------------------
